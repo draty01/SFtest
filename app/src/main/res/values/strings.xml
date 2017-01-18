@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SFtest</string>
+    <string name="initting">Game initing....</string>
+    <string name="start">startting....</string>
+</resources>
