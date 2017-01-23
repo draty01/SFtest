@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.jiaming.sftest.element.Food;
 import com.jiaming.sftest.element.IElement;
-import com.jiaming.sftest.element.Snake;
 import com.jiaming.sftest.element.Snake2;
 import com.jiaming.sftest.element.StageBg;
 import com.jiaming.sftest.setting.Contains;
@@ -37,6 +36,7 @@ public class GameCtrl {
     public final static int  INIT_OK            = 100;
     public final static String  TAG            = "GameCtrl";
     private Screen mScreen;
+    private int CtrlDirec=0;
     //    private        int  mStageWidth  = Contains.STAGE_WIDTH;
     //    private        int  mStageHeight = Contains.STAGE_HEIGHT;
 
@@ -83,6 +83,8 @@ public class GameCtrl {
 
     private void initElemnts() {
         //新建一个线程池建场景元素
+        final int ScreenHaftWidthPx = DensityUtil.getScreenMaxWidth()/2;
+        final int ScreenHaftHeightPx = DensityUtil.getScreenMaxHeight()/2;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -92,6 +94,13 @@ public class GameCtrl {
                     foods.add(new Food(0));
                 }
                 mSnake = new Snake2();
+                mSnake.setMoveListen(new Snake2.onMoveListen() {
+                    @Override
+                    public void onMove(int leftAtStage, int topAtStage) {
+                        setScreenLeft(leftAtStage-ScreenHaftWidthPx);
+                        setScreenTop(topAtStage-ScreenHaftHeightPx);
+                    }
+                });
                 snakes.add(mSnake);
                 initCallback.onChang(INIT_OK);
             }
@@ -108,6 +117,13 @@ public class GameCtrl {
 
     public Snake2 getSnake() {
         return mSnake;
+    }
+
+    public void setCtrlDirec(int ctrlDirec) {
+        CtrlDirec = ctrlDirec;
+        if (mSnake!=null){
+            mSnake.setCtrlDirec(CtrlDirec);
+        }
     }
 
     public int getScreenLeft() {

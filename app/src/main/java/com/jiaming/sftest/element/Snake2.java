@@ -34,8 +34,8 @@ public class Snake2 extends Element {
     Coordinate firstTurnPoint;           //第一个转折点
     private String TAG           = "Snake";
     private float  LastMoveDirec = 0;//移动方向,正右边为0度,顺时针加由0-360,取值范围[0,360)
-    private float  newMoveDirec = 0;//移动方向,正右边为0度,顺时针加由0-360,取值范围[0,360)
-    
+    private float  ctrlDirec     = 0;//摇杆移动方向,正右边为0度,顺时针加由0-360,取值范围[0,360)
+
     public Snake2() {
         this(Contains.SNAKE_INIT_SCORE);
     }
@@ -44,7 +44,11 @@ public class Snake2 extends Element {
         setScore(initScore);
         lastTime = nowMillis();
         reflash(lastTime, LastMoveDirec);
-        //        path.lineTo();
+    }
+
+    @Override
+    public void reflash(long time) {
+        reflash(nowMillis(), getNewMoveDirect());   
     }
 
     private void reflash(long timeMill, float newDirec) {
@@ -57,25 +61,28 @@ public class Snake2 extends Element {
             setTopPosition(topAtStage);
             //设点第一个折点位置,默认为最后一个点后面
             firstTurnPoint = new Coordinate(getLeftPosition() - jointCount * Contains.SNAKE_JOINT_DISTANCE_PX, getTopPosition());
-            Log.d(TAG, "reflash: firstTurnPoint:"+firstTurnPoint);
+            Log.d(TAG, "reflash: firstTurnPoint:" + firstTurnPoint);
         } else {
-            if (newDirec!= LastMoveDirec){
+            if (newDirec != LastMoveDirec) {
                 //添加一个转折头
                 Coordinate newTurn = new Coordinate(getLeftPosition(), getTopPosition());
                 newTurn.setNext(firstTurnPoint);
-                firstTurnPoint=newTurn;
+                firstTurnPoint = newTurn;
             }
             //根据方向刷新头位置
             Coordinate oldCoor = new Coordinate(getLeftPosition(), getTopPosition());
-            float distance=(timeMill-lastTime)*getSnakeSpeed();
+            float distance = (timeMill - lastTime) * getSnakeSpeed();
             Coordinate newHead = nextCoor(LastMoveDirec, distance, oldCoor);
             setLeftPosition(newHead.mLeft);
             setTopPosition(newHead.mTop);
-            LastMoveDirec=newDirec;
+            LastMoveDirec = newDirec;
         }
-        lastTime=timeMill;
+        if (mMoveListen!=null){
+            mMoveListen.onMove(mPositionLeftAtStage,mPositionTopAtStage);
+        }
+        lastTime = timeMill;
     }
-    
+
     private float getSnakeSpeed() {
         return Contains.SNAKE_MOVE_SPEED_NORMAL_PX;
     }
@@ -87,53 +94,21 @@ public class Snake2 extends Element {
      * @return 新坐标
      */
     private Coordinate nextCoor(float direction, float distance, Coordinate oldCoor) {
-        if (direction<0){
-            throw  new RuntimeException("direction must not less than  0");
+        if (direction < 0) {
+            throw new RuntimeException("direction must not less than  0");
         }
         int newLeft;
-        int newTop ;
+        int newTop;
         int oldLeft = oldCoor.mLeft;
         int oldTop = oldCoor.mTop;
         while (direction >= 360) {
             direction -= 360;
         }
-        double angle = direction * Math.PI / 180;
+        double angle = direction * 0.0174532925199433;// Math.PI / 180=0.0174532925199433;
         newLeft = doubleToInt(distance * Math.cos(angle));
         newTop = doubleToInt(distance * Math.sin(angle));
-        //        if (direction == 0) {
-        //            newLeft = floatToInt(distance);
-        //            newTop = 0;
-        //        } else if (direction > 0 && direction < 90) {
-        //            direction = (float) (direction * Math.PI / 180);
-        //            newLeft = doubleToInt(distance * Math.cos(direction));
-        //            newTop = doubleToInt(distance * Math.sin(direction));
-        //        } else if (direction == 90) {
-        //            newLeft = 0;
-        //            newTop = floatToInt(distance);
-        //        } else if (direction > 90 && direction < 180) {
-        //            direction = 180 - direction;
-        //            direction = (float) (direction * Math.PI / 180);
-        //            newLeft = -doubleToInt(distance * Math.cos(direction));
-        //            newTop = doubleToInt(distance * Math.sin(direction));
-        //        } else if (direction == 180) {
-        //            newTop = 0;
-        //            newLeft = -floatToInt(distance);
-        //        } else if (direction > 180 && direction < 270) {
-        //            direction = direction - 180;
-        //            direction = (float) (direction * Math.PI / 180);
-        //            newLeft = -doubleToInt(distance * Math.cos(direction));
-        //            newTop = -doubleToInt(distance * Math.sin(direction));
-        //        } else if (direction == 270) {
-        //            newLeft = 0;
-        //            newTop = -floatToInt(distance);
-        //        } else if (direction > 270) {
-        //            direction = 360 - direction;
-        //            direction = (float) (direction * Math.PI / 180);
-        //            newLeft = doubleToInt(distance * Math.cos(direction));
-        //            newTop = -doubleToInt(distance * Math.sin(direction));
-        //        }
-        newLeft=oldLeft+newLeft;
-        newTop=oldTop+newTop;
+        newLeft = oldLeft + newLeft;
+        newTop = oldTop + newTop;
         return new Coordinate(newLeft, newTop);
     }
 
@@ -171,55 +146,63 @@ public class Snake2 extends Element {
     @Override
     public void draw(int ScreenLeftAtStage, int ScreenTopAtStage, Canvas canvas, Paint p) {
         //        Log.d(TAG, "draw");
-        reflash(nowMillis(),newMoveDirec);
         int screenMaxWidth = getScreenMaxWidth();
         int screenMaxHeight = getScreenMaxHeight();
+        int[] mLefts = new int[jointCount];
+        int[] mTops = new int[jointCount];
         //获取第一个点:
         Coordinate FirstJoint = new Coordinate(getLeftPosition(), getTopPosition());
-//        Log.d(TAG, "draw: "+FirstJoint);
-        Coordinate lastJoint=FirstJoint;//最后一个Joint
+        mLefts[0] = getLeftPosition();
+        mTops[0] = getTopPosition();
+        //        Log.d(TAG, "draw: "+FirstJoint);
+        //        Coordinate lastJoint = FirstJoint;//最后一个Joint
         //从初始位置计算,根据方向,关节间距计算下一个点
         Coordinate beforeTrun = FirstJoint;//这个是临时的
         Coordinate afterTrun = firstTurnPoint;
         float trunDist = getDistance(beforeTrun, afterTrun);//两个转折点之间的距离
         float lastJointToBefore = 0;//上一个关节到上一个转折点的距离
-        for (int i = 0; i < jointCount; i++) {
+        for (int i = 1; i < jointCount; i++) {
             float jointToBefore = Contains.SNAKE_JOINT_DISTANCE_PX + lastJointToBefore;//本关节到上一个转折点的距离
-//            Log.d(TAG, "draw: jointToBefore:"+jointToBefore+" trunDist:"+trunDist);
+            //            Log.d(TAG, "draw: jointToBefore:"+jointToBefore+" trunDist:"+trunDist);
             while (jointToBefore > trunDist) {//如果本关节到上一个转接点的距离少于这两个关节点的距离,就把本关节移动到下一节
                 jointToBefore = jointToBefore - trunDist;
                 beforeTrun = afterTrun;
                 afterTrun = (Coordinate) beforeTrun.getNext();
                 trunDist = getDistance(beforeTrun, afterTrun);
             }
-            int mLeft ;
+            int mLeft;
             int mTop;
             if (jointToBefore == trunDist) {
                 mLeft = afterTrun.mLeft;
                 mTop = afterTrun.mTop;
             } else {
                 float v = jointToBefore / trunDist;
-                mLeft= (int) ((afterTrun.mLeft-beforeTrun.mLeft)*v+beforeTrun.mLeft+0.5f);
-                mTop= (int) ((afterTrun.mTop-beforeTrun.mTop)*v+beforeTrun.mTop+0.5f);
+                mLeft = (int) ((afterTrun.mLeft - beforeTrun.mLeft) * v + beforeTrun.mLeft + 0.5f);
+                mTop = (int) ((afterTrun.mTop - beforeTrun.mTop) * v + beforeTrun.mTop + 0.5f);
             }
-            Coordinate newCoor = new Coordinate(mLeft, mTop);
-//            Log.d(TAG, "draw: newCoor:"+newCoor+" lastJoint:"+lastJoint);
-            newCoor.setNext(lastJoint);
-            lastJoint=newCoor;
+            mLefts[i] = mLeft;
+            mTops[i] = mTop;
+            //            Coordinate newCoor = new Coordinate(mLeft, mTop);
+            //            //            Log.d(TAG, "draw: newCoor:"+newCoor+" lastJoint:"+lastJoint);
+            //            newCoor.setNext(lastJoint);
+            //            lastJoint = newCoor;
             lastJointToBefore = jointToBefore;
         }
         //去掉最后没用的转折点
-        if (afterTrun.getNext()!=null) {
+        if (afterTrun.getNext() != null) {
             afterTrun.getNext().setNext(null);
         }
         //根据点的位置绘制点:
-        Coordinate drowJoint =lastJoint;
-        int drawCount=0;
-        while (drowJoint!=null&&drawCount<10){
-//            Log.d(TAG, "draw: drawCount:"+ ++drawCount);
-//            Log.d(TAG, "draw: drowJoint:"+drowJoint);
-            int leftPositionAtStage = drowJoint.mLeft;
-            int topPositionAtStage = drowJoint.mTop;
+        //        Coordinate drowJoint = lastJoint;
+        for (int i = mLefts.length - 1; i >= 0; i--) {
+            //        }
+            //        while (drowJoint != null ) {
+            //            Log.d(TAG, "draw: drawCount:"+ ++drawCount);
+            //            Log.d(TAG, "draw: drowJoint:"+drowJoint);
+            //            int leftPositionAtStage = drowJoint.mLeft;
+            //            int topPositionAtStage = drowJoint.mTop; 
+            int leftPositionAtStage = mLefts[i];
+            int topPositionAtStage = mTops[i];
             int leftAtSc = leftPositionAtStage - ScreenLeftAtStage;
             int topAtSc = topPositionAtStage - ScreenTopAtStage;
             //            Log.d(TAG, "draw: leftPositionAtStage:" + leftPositionAtStage
@@ -227,22 +210,65 @@ public class Snake2 extends Element {
             //                    + "leftAtSc:" + leftAtSc + "topAtSc:" + topAtSc + "screenMaxWidth:"+screenMaxWidth+"screenMaxHeight:"+screenMaxHeight);
             if (leftAtSc > screenMaxWidth + sizeRad || leftAtSc < 0 - sizeRad || topAtSc > screenMaxHeight + sizeRad || topAtSc < 0 - sizeRad) {
                 //                Log.d(TAG, "draw: not at Screen");
-            }else {
+            } else {
                 drawJoint(canvas, p, leftAtSc, topAtSc);
             }
             //            Log.d(TAG, "draw: sizeRad:"+sizeRad);
-            drowJoint= (Coordinate) drowJoint.getNext();
+            //            drowJoint = (Coordinate) drowJoint.getNext();
         }
+    }
+
+    int reflashCount    = 0;
+    int reflashMinCount = 5;
+
+    /**
+     * 配置最大转向角度
+     *
+     * @return
+     */
+    private float getNewMoveDirect() {
+        if (reflashCount <= reflashMinCount) {
+            reflashCount++;
+            return LastMoveDirec;
+        }
+        reflashCount = 0;
+        float v = ctrlDirec - LastMoveDirec;
+        //允许范围
+        float newDirec;
+        float l = LastMoveDirec + Contains.SNAKE_MAX_TRUN_ANGLE;
+        float s = LastMoveDirec - Contains.SNAKE_MAX_TRUN_ANGLE;
+        if (v == 0) {
+            return LastMoveDirec;
+        }
+        if (v < 0) {
+            v = v + 360;
+        }
+        if (l >= 360) {
+            l = l - 360;
+        }
+        if (s < 0) {
+            s = s + 360;
+        }
+        if (v <= Contains.SNAKE_MAX_TRUN_ANGLE) {
+            newDirec = ctrlDirec;
+        } else if (v <= 180) {
+            newDirec = l;
+        } else if (v < 360 - Contains.SNAKE_MAX_TRUN_ANGLE) {
+            newDirec = s;
+        } else {
+            newDirec = ctrlDirec;
+        }
+        return newDirec;
     }
 
     HashMap<Integer, Float> distances = new HashMap<>();
 
-    private float getDistance(@NonNull Coordinate beforeTrun,@NonNull  Coordinate afterTrun) {
+    private float getDistance(@NonNull Coordinate beforeTrun, @NonNull Coordinate afterTrun) {
         int beHash = beforeTrun.hashCode();
         int afHash = afterTrun.hashCode();
         int key = afHash - beHash;
         Float distance = distances.get(key);
-//        Log.d(TAG, "getDistance: beforeTrun:"+beforeTrun+" afterTrun:"+afterTrun);
+        //        Log.d(TAG, "getDistance: beforeTrun:"+beforeTrun+" afterTrun:"+afterTrun);
         if (distance == null) {
             int l = (beforeTrun.mLeft - afterTrun.mLeft) * (beforeTrun.mLeft - afterTrun.mLeft);
             int t = (beforeTrun.mTop - afterTrun.mTop) * (beforeTrun.mTop - afterTrun.mTop);
@@ -271,14 +297,25 @@ public class Snake2 extends Element {
         level = (int) (score / levelupJointCount / scoreBase);
         int jointScore = (level + 1) * scoreBase;
         jointCount = (int) (score / jointScore);
-        Log.d(TAG, "setScore: jointCount:"+jointCount);
+        Log.d(TAG, "setScore: jointCount:" + jointCount);
         sizeRad = Contains.SNAKE_JOINT_RAD_BASE + level;
     }
 
-    public void setNewMoveDirec(float newMoveDirec) {
-        this.newMoveDirec = newMoveDirec;
+    public void setCtrlDirec(float ctrlDirec) {
+        this.ctrlDirec = ctrlDirec;
     }
-    private  int doubleToInt(double v) {
+
+    private int doubleToInt(double v) {
         return (int) (v + 0.5f);
+    }
+
+    private onMoveListen mMoveListen;
+
+    public interface onMoveListen {
+        void onMove(int leftAtStage, int topAtStage);
+    }
+
+    public void setMoveListen(onMoveListen moveListen) {
+        mMoveListen = moveListen;
     }
 }

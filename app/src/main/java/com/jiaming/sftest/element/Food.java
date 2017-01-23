@@ -21,6 +21,7 @@ public class Food extends Element {
     private int sizeDip = Contains.foodSizesDip[sizeL];
     private int sizeRad = Contains.foodSizesPx[sizeL];
     private String TAG="Food";
+    Paint mPaint=new Paint();
 
     public Food(int sizeL) {
         if (sizeL >= Contains.foodSizesDip.length || sizeL < 0)
@@ -31,6 +32,9 @@ public class Food extends Element {
         setLeftPosition(left);
         setTopPosition(top);
         color = ColorUtil.getRanColor();
+        mPaint.setColor(color);
+        mPaint.setStyle(Paint.Style.FILL);
+        mPaint.setAntiAlias(true);
     }
 
     private void setSize(int i) {
@@ -38,28 +42,27 @@ public class Food extends Element {
         sizeDip=Contains.foodSizesDip[sizeL];
         sizeRad=Contains.foodSizesPx[sizeL];
     }
-
+    
     @Override
     public void draw(int ScreenLeftAtStage, int ScreenTopAtStage, Canvas canvas, Paint p) {;
-        int leftPositionAtStage = getLeftPosition();
-        int topPositionAtStage = getTopPosition();
-        int leftAtSc=leftPositionAtStage-ScreenLeftAtStage;
-        int topAtSc=topPositionAtStage-ScreenTopAtStage;
-        int screenMaxWidth = getScreenMaxWidth();
-        int screenMaxHeight = getScreenMaxHeight();
+        
+        int leftAtSc=mPositionLeftAtStage-ScreenLeftAtStage;
+        int topAtSc=mPositionTopAtStage-ScreenTopAtStage;
+//        int screenMaxWidth = getScreenMaxWidth();
+//        int screenMaxHeight = getScreenMaxHeight();
         //判断在不在屏幕内
 //        Log.d(TAG, "draw: leftPositionAtStage:" + leftPositionAtStage 
 //                + "topPositionAtStage:" + topPositionAtStage 
 //                + "leftAtSc:" + leftAtSc + "topAtSc:" + topAtSc + "screenMaxWidth:"+screenMaxWidth+"screenMaxHeight:"+screenMaxHeight);
-        if (leftAtSc>screenMaxWidth+sizeRad||leftAtSc<0-sizeRad||topAtSc> screenMaxHeight+sizeRad ||topAtSc<0-sizeRad){
+        if (leftAtSc>ScreenMaxWidthPx+sizeRad||leftAtSc<0-sizeRad||topAtSc> ScreenMaxHeightPx+sizeRad ||topAtSc<0-sizeRad){
 //            Log.d(TAG, "draw: not at Screen");
             return;
         }
         //画出来
 //        Log.d(TAG, "draw: color"+color+" sizeRad:"+sizeRad);
-        p.setColor(color);
-        p.setStyle(Paint.Style.FILL);
-        p.setAntiAlias(true);
+     
+        p.set(mPaint);
+//        canvas.drawPoint(leftAtSc, topAtSc,p);
         canvas.drawCircle(leftAtSc, topAtSc, sizeRad, p);
     }
 }

@@ -11,15 +11,15 @@ import com.jiaming.sftest.utils.DensityUtil;
  * 修改备注：
  */
 public abstract class Element implements IElement {
-    private static int mStageWidthPx;
-    private static int mStageHeightPx;
-    private static int mStageWidthdip;
-    private static int mStageHeightdip;
-    private static int ScreenMaxWidthPx;
-    private static int ScreenMaxHeightPx;
+    public static int mStageWidthPx;
+    public static int mStageHeightPx;
+    public static int mStageWidthdip;
+    public static int mStageHeightdip;
+    public static int ScreenMaxWidthPx;
+    public static int ScreenMaxHeightPx;
     //自己的位置
-    private        int mPositionLeftAtStage;
-    private        int mPositionTopAtStage;
+    public        int mPositionLeftAtStage;
+    public        int mPositionTopAtStage;
     
     long lastTime;
     static {
@@ -82,5 +82,9 @@ public abstract class Element implements IElement {
     
     public long nowMillis(){
         return System.currentTimeMillis();
+    }
+
+    @Override
+    public void reflash(long time) {
     }
 }

@@ -28,10 +28,11 @@ public class Contains {
 //    public static int SNAKE_JOINT_DISTANCE_DP;//关节间的距离 单位dp
     public static int SNAKE_JOINT_DISTANCE_PX;//关节间的距离
     public static int SNAKE_JOINT_DISTANCE;//关节间的距离
-    public static float SNAKE_MOVE_SPEED_NORMAL_DP = 0.1f;//dp/每毫秒 蛇的移动速度
+    public static float SNAKE_MOVE_SPEED_NORMAL_DP = 0.15f;//dp/每毫秒 蛇的移动速度
     public static float SNAKE_MOVE_SPEED_NORMAL_PX;//px/每毫秒 蛇的移动速度
 
     private static final String TAG="Contains";
+    public static int SNAKE_MAX_TRUN_ANGLE=45;
     static {
         STAGE_WIDTH_PX = DensityUtil.dip2px(STAGE_WIDTH);
         STAGE_HEIGHT_PX = DensityUtil.dip2px(STAGE_HEIGHT);

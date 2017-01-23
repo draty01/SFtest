@@ -44,7 +44,7 @@ public class Snake extends Element {
         //        path.lineTo();
     }
 
-    private void reflash(long timeMill) {
+    public void reflash(long timeMill) {
         if (timeMill == lastTime) {
             //初始化时
             joints.clear();
