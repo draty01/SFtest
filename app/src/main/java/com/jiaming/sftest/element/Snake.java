@@ -31,6 +31,7 @@ public class Snake extends Element {
     private int                    initTopAtStageDp  = 100;
     private LinkedList<Coordinate> joints            = new LinkedList<>();
     private String                 TAG               = "Snake";
+    private float MoveDirec=-1;//移动方向,正右边为0度,顺时针加由0-360,取值范围[0,360)
 
     public Snake() {
         this(Contains.SNAKE_INIT_SCORE);
@@ -63,7 +64,35 @@ public class Snake extends Element {
                 joints.addLast(nextCoor);
             }
         } else {
+            //根据时间差与方向 求出新位置 新位置放入最前,
+            lastTime=timeMill;
+            if (jointCount==joints.size()) {//关节数没发生变化
+                //去掉最后一节,增加新的第一节
+                joints.removeLast();
+                Coordinate newFirst;
+                if (MoveDirec==-1){
+                     newFirst = nextCoor(joints.get(1), joints.getFirst());
+                }else {
+                    //计算原前进方向,与新前进方向的夹角是否小于90度,如果小于90度就按新方向,否则按90度
+                    newFirst=null;
+                }
+                joints.addFirst(newFirst);
+            }else {
+                //关节变了
+            }
+            
         }
+    }
+
+    /**
+     * @param direction 方向[0,360) //正右边为0,顺时针
+     * @param distance 距离
+     * @param oldCoor 旧坐标
+     * @return 新坐标
+     */
+    private Coordinate nextCoor(float direction,float distance,Coordinate oldCoor){
+        
+        return new Coordinate(1,0);
     }
 
     private Coordinate nextCoor(Coordinate fristCoor, Coordinate SecondCoor) {
@@ -83,7 +112,7 @@ public class Snake extends Element {
             k =  (top1 - top2)/(left1 - left2);
             b =  top2- k *left2 ;
         }
-        float distance = sizeRad * 2 * 0.8F;
+        float distance = sizeRad*2*0.8f;
         //l3=kt3+b  (l3-l2)^2+(t3-t2)^2=dis^2
         int left3;
         int top3;
@@ -100,6 +129,7 @@ public class Snake extends Element {
     @Override
     public void draw(int ScreenLeftAtStage, int ScreenTopAtStage, Canvas canvas, Paint p) {
 //        Log.d(TAG, "draw");
+        reflash(nowMillis());
         int screenMaxWidth = getScreenMaxWidth();
         int screenMaxHeight = getScreenMaxHeight();
         for (Coordinate joint : joints) {

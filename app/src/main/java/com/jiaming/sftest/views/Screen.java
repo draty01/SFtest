@@ -32,23 +32,21 @@ public class Screen extends SurfaceView implements SurfaceHolder.Callback {
     private String TAG = "Screen";
 
     public Screen(Context context) {
-        this(context,null);
-        
+        this(context, null);
     }
 
     public Screen(Context context, AttributeSet attrs) {
-        this(context, attrs,0);
+        this(context, attrs, 0);
     }
 
     public Screen(Context context, AttributeSet attrs, int defStyleAttr) {
-        this(context, attrs,defStyleAttr,0);
-        
+        this(context, attrs, defStyleAttr, 0);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public Screen(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr,defStyleRes);
-        mGameCtrl=GameCtrl.getInstance();
+        super(context, attrs, defStyleAttr, defStyleRes);
+        mGameCtrl = GameCtrl.getInstance();
         holder = this.getHolder();
         holder.addCallback(this);
         myThread = new ScreenThread(holder);//创建一个绘图线程
@@ -118,12 +116,15 @@ public class Screen extends SurfaceView implements SurfaceHolder.Callback {
             isRun = true;
         }
 
+        long startTime = 0;
+
         @Override
         public void run() {
             int count = 0;
             Paint p = new Paint(); //创建画笔
             Log.d(TAG, "run: start run");
             while (isRun) {
+                startTime = System.currentTimeMillis();
                 Canvas c = null;
                 try {
                     if (!holder.getSurface().isValid()) {
@@ -134,7 +135,6 @@ public class Screen extends SurfaceView implements SurfaceHolder.Callback {
                             c.drawColor(Color.BLUE);//设置画布背景颜色
                             drawScreen(c, p);
                         }
-                        Thread.sleep(Contains.DRAW_SLEEP_TIME);//睡眠时间为1秒
                     }
                 } catch (IllegalStateException e) {
                     // TODO: handle exception
@@ -152,7 +152,17 @@ public class Screen extends SurfaceView implements SurfaceHolder.Callback {
                         //                        Log.d(TAG, "run: start finally");
                     }
                 }
-                //                Log.d(TAG, "run: start end");
+                long endTime = System.currentTimeMillis();
+                long usedTime = endTime-startTime;
+                long sleepTime = Contains.DRAW_SLEEP_TIME - usedTime;
+                Log.d(TAG, "run: usedTime:"+usedTime);
+                if (sleepTime > 0) {
+                    try {
+                        Thread.sleep(sleepTime);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
 

@@ -6,6 +6,7 @@ import android.util.Log;
 import com.jiaming.sftest.element.Food;
 import com.jiaming.sftest.element.IElement;
 import com.jiaming.sftest.element.Snake;
+import com.jiaming.sftest.element.Snake2;
 import com.jiaming.sftest.element.StageBg;
 import com.jiaming.sftest.setting.Contains;
 import com.jiaming.sftest.utils.DensityUtil;
@@ -90,7 +91,8 @@ public class GameCtrl {
                 for (int i = 0; i < foodCount; i++) {
                     foods.add(new Food(0));
                 }
-                snakes.add(new Snake());
+                mSnake = new Snake2();
+                snakes.add(mSnake);
                 initCallback.onChang(INIT_OK);
             }
         }).start();
@@ -99,9 +101,14 @@ public class GameCtrl {
     IElement       bg     = new StageBg();
     List<IElement> foods  = new ArrayList<>();
     List<IElement> snakes = new ArrayList<>();
-
+    Snake2 mSnake;
+    
     public int screenLeft;
     public int screenTop;
+
+    public Snake2 getSnake() {
+        return mSnake;
+    }
 
     public int getScreenLeft() {
         return screenLeft;

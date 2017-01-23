@@ -8,7 +8,7 @@ package com.jiaming.sftest.model;
  * 修改时间：
  * 修改备注：
  */
-public class Coordinate {
+public class Coordinate extends LinkObject {
     public int mLeft;
     public int mTop;
 
