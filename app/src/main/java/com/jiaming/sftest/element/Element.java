@@ -20,16 +20,20 @@ public abstract class Element implements IElement {
     //自己的位置
     public        int mPositionLeftAtStage;
     public        int mPositionTopAtStage;
-    
+
     long lastTime;
     static {
         mStageWidthPx = Contains.STAGE_WIDTH_PX;
         mStageHeightPx = Contains.STAGE_HEIGHT_PX;
-        mStageWidthdip=Contains.STAGE_WIDTH;
-        mStageHeightdip=Contains.STAGE_HEIGHT;
+        mStageWidthdip = Contains.STAGE_WIDTH;
+        mStageHeightdip = Contains.STAGE_HEIGHT;
         ScreenMaxWidthPx = DensityUtil.getScreenMaxWidth();
         ScreenMaxHeightPx = DensityUtil.getScreenMaxHeight();
     }
+    /**
+     * 单位是px
+     * @return
+     */
     public int getLeftPosition() {
         return mPositionLeftAtStage;
     }
@@ -37,7 +41,7 @@ public abstract class Element implements IElement {
     public void setLeftPosition(int LeftPosition) {
         mPositionLeftAtStage = LeftPosition;
     }
-    
+
     public int getTopPosition() {
         return mPositionTopAtStage;
     }
@@ -54,8 +58,6 @@ public abstract class Element implements IElement {
         return DensityUtil.px2dip(ScreenMaxHeightPx);
     }
 
-   
-    
     public static int getScreenMaxWidth() {
         return ScreenMaxWidthPx;
     }
@@ -79,8 +81,8 @@ public abstract class Element implements IElement {
     public static int getmStageHeightdip() {
         return mStageHeightdip;
     }
-    
-    public long nowMillis(){
+
+    public long nowMillis() {
         return System.currentTimeMillis();
     }
 

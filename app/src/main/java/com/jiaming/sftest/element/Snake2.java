@@ -78,7 +78,7 @@ public class Snake2 extends Element {
             LastMoveDirec = newDirec;
         }
         if (mMoveListen!=null){
-            mMoveListen.onMove(mPositionLeftAtStage,mPositionTopAtStage);
+            mMoveListen.onMove(mPositionLeftAtStage,mPositionTopAtStage,this);
         }
         lastTime = timeMill;
     }
@@ -221,6 +221,10 @@ public class Snake2 extends Element {
     int reflashCount    = 0;
     int reflashMinCount = 5;
 
+    public int getSizeRad() {
+        return sizeRad;
+    }
+
     /**
      * 配置最大转向角度
      *
@@ -290,6 +294,11 @@ public class Snake2 extends Element {
         return score;
     }
 
+    public void addScore(int addScore){
+        Log.d(TAG, "eat a food add "+addScore);
+        setScore(this.score+addScore);
+    }
+    
     public void setScore(long score) {
         this.score = score;
         int levelupJointCount = Contains.SNAKE_LEVEL_UP_JOINT_COUNT;
@@ -312,7 +321,7 @@ public class Snake2 extends Element {
     private onMoveListen mMoveListen;
 
     public interface onMoveListen {
-        void onMove(int leftAtStage, int topAtStage);
+        void onMove(int leftAtStage, int topAtStage, Snake2 snake);
     }
 
     public void setMoveListen(onMoveListen moveListen) {

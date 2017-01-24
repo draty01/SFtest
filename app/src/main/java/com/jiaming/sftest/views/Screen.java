@@ -173,9 +173,9 @@ public class Screen extends SurfaceView implements SurfaceHolder.Callback {
             List<IElement> foods = mGameCtrl.getFoods(true);
             List<IElement> snakes = mGameCtrl.getSnakes(true);
             long now = System.currentTimeMillis();
-            for (int i = 0; i < foods.size(); i++) {
-                foods.get(i).reflash(now);
-            }
+//            for (int i = 0; i < foods.size(); i++) {
+//                foods.get(i).reflash(now);
+//            }
             for (int i = 0; i < snakes.size(); i++) {
                 snakes.get(i).reflash(now);
             }
