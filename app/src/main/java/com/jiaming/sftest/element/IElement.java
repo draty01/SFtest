@@ -8,4 +8,5 @@ import android.graphics.Paint;
 public interface IElement {
     void draw(int ScreenLeftAtStage, int ScreenTopAtStage, Canvas canvas, Paint p);
     void reflash(long time);
+    boolean isShow();
 }

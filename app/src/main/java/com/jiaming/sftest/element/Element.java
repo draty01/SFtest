@@ -89,4 +89,9 @@ public abstract class Element implements IElement {
     @Override
     public void reflash(long time) {
     }
+
+    @Override
+    public boolean isShow() {
+        return true;
+    }
 }

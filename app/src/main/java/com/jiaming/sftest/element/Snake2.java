@@ -48,10 +48,14 @@ public class Snake2 extends Element {
 
     @Override
     public void reflash(long time) {
-        reflash(nowMillis(), getNewMoveDirect());   
+        reflash(nowMillis(), getNewMoveDirect());
     }
 
+    private boolean mDead = false;
+
     private void reflash(long timeMill, float newDirec) {
+        if (mDead)
+            return;
         if (timeMill == lastTime) {
             //初始化时
             //设置蛇头位置
@@ -77,12 +81,74 @@ public class Snake2 extends Element {
             setTopPosition(newHead.mTop);
             LastMoveDirec = newDirec;
         }
-        if (mMoveListen!=null){
-            mMoveListen.onMove(mPositionLeftAtStage,mPositionTopAtStage,this);
+        //检查碰壁
+        if (mPositionLeftAtStage <= 0 || mPositionLeftAtStage >= mStageWidthPx || mPositionTopAtStage <= 0 || mPositionTopAtStage >= mStageHeightPx) {
+            if (mEventListen != null) {
+                mEventListen.onDead(mLefts, mTops);
+            }
+            mDead = true;
+            return;
+        }
+        //计算要绘制的点
+        makePoints();
+        if (mEventListen != null) {
+            mEventListen.onMove(mPositionLeftAtStage, mPositionTopAtStage, this);
         }
         lastTime = timeMill;
     }
 
+    int[] mLefts;
+    int[] mTops;
+
+    private void makePoints() {
+        mLefts = new int[jointCount];
+        mTops = new int[jointCount];
+        //获取第一个点:
+        Coordinate FirstJoint = new Coordinate(getLeftPosition(), getTopPosition());
+        mLefts[0] = getLeftPosition();
+        mTops[0] = getTopPosition();
+        //        Log.d(TAG, "draw: "+FirstJoint);
+        //        Coordinate lastJoint = FirstJoint;//最后一个Joint
+        //从初始位置计算,根据方向,关节间距计算下一个点
+        Coordinate beforeTrun = FirstJoint;//这个是临时的
+        Coordinate afterTrun = firstTurnPoint;
+        float trunDist = getDistance(beforeTrun, afterTrun);//两个转折点之间的距离
+        float lastJointToBefore = 0;//上一个关节到上一个转折点的距离
+        for (int i = 1; i < jointCount; i++) {
+            float jointToBefore = Contains.SNAKE_JOINT_DISTANCE_PX + lastJointToBefore;//本关节到上一个转折点的距离
+            //            Log.d(TAG, "draw: jointToBefore:"+jointToBefore+" trunDist:"+trunDist);
+            while (jointToBefore > trunDist) {//如果本关节到上一个转接点的距离少于这两个关节点的距离,就把本关节移动到下一节
+                jointToBefore = jointToBefore - trunDist;
+                beforeTrun = afterTrun;
+                afterTrun = (Coordinate) beforeTrun.getNext();
+                trunDist = getDistance(beforeTrun, afterTrun);
+            }
+            int mLeft;
+            int mTop;
+            if (jointToBefore == trunDist) {
+                mLeft = afterTrun.mLeft;
+                mTop = afterTrun.mTop;
+            } else {
+                float v = jointToBefore / trunDist;
+                mLeft = (int) ((afterTrun.mLeft - beforeTrun.mLeft) * v + beforeTrun.mLeft + 0.5f);
+                mTop = (int) ((afterTrun.mTop - beforeTrun.mTop) * v + beforeTrun.mTop + 0.5f);
+            }
+            mLefts[i] = mLeft;
+            mTops[i] = mTop;
+            //            Coordinate newCoor = new Coordinate(mLeft, mTop);
+            //            //            Log.d(TAG, "draw: newCoor:"+newCoor+" lastJoint:"+lastJoint);
+            //            newCoor.setNext(lastJoint);
+            //            lastJoint = newCoor;
+            lastJointToBefore = jointToBefore;
+        }
+        //去掉最后没用的转折点
+        if (afterTrun.getNext() != null) {
+            afterTrun.getNext().setNext(null);
+        }
+    }
+
+    
+    
     private float getSnakeSpeed() {
         return Contains.SNAKE_MOVE_SPEED_NORMAL_PX;
     }
@@ -146,54 +212,15 @@ public class Snake2 extends Element {
     @Override
     public void draw(int ScreenLeftAtStage, int ScreenTopAtStage, Canvas canvas, Paint p) {
         //        Log.d(TAG, "draw");
+        if (mDead)
+            return;
         int screenMaxWidth = getScreenMaxWidth();
         int screenMaxHeight = getScreenMaxHeight();
-        int[] mLefts = new int[jointCount];
-        int[] mTops = new int[jointCount];
-        //获取第一个点:
-        Coordinate FirstJoint = new Coordinate(getLeftPosition(), getTopPosition());
-        mLefts[0] = getLeftPosition();
-        mTops[0] = getTopPosition();
-        //        Log.d(TAG, "draw: "+FirstJoint);
-        //        Coordinate lastJoint = FirstJoint;//最后一个Joint
-        //从初始位置计算,根据方向,关节间距计算下一个点
-        Coordinate beforeTrun = FirstJoint;//这个是临时的
-        Coordinate afterTrun = firstTurnPoint;
-        float trunDist = getDistance(beforeTrun, afterTrun);//两个转折点之间的距离
-        float lastJointToBefore = 0;//上一个关节到上一个转折点的距离
-        for (int i = 1; i < jointCount; i++) {
-            float jointToBefore = Contains.SNAKE_JOINT_DISTANCE_PX + lastJointToBefore;//本关节到上一个转折点的距离
-            //            Log.d(TAG, "draw: jointToBefore:"+jointToBefore+" trunDist:"+trunDist);
-            while (jointToBefore > trunDist) {//如果本关节到上一个转接点的距离少于这两个关节点的距离,就把本关节移动到下一节
-                jointToBefore = jointToBefore - trunDist;
-                beforeTrun = afterTrun;
-                afterTrun = (Coordinate) beforeTrun.getNext();
-                trunDist = getDistance(beforeTrun, afterTrun);
-            }
-            int mLeft;
-            int mTop;
-            if (jointToBefore == trunDist) {
-                mLeft = afterTrun.mLeft;
-                mTop = afterTrun.mTop;
-            } else {
-                float v = jointToBefore / trunDist;
-                mLeft = (int) ((afterTrun.mLeft - beforeTrun.mLeft) * v + beforeTrun.mLeft + 0.5f);
-                mTop = (int) ((afterTrun.mTop - beforeTrun.mTop) * v + beforeTrun.mTop + 0.5f);
-            }
-            mLefts[i] = mLeft;
-            mTops[i] = mTop;
-            //            Coordinate newCoor = new Coordinate(mLeft, mTop);
-            //            //            Log.d(TAG, "draw: newCoor:"+newCoor+" lastJoint:"+lastJoint);
-            //            newCoor.setNext(lastJoint);
-            //            lastJoint = newCoor;
-            lastJointToBefore = jointToBefore;
-        }
-        //去掉最后没用的转折点
-        if (afterTrun.getNext() != null) {
-            afterTrun.getNext().setNext(null);
-        }
         //根据点的位置绘制点:
         //        Coordinate drowJoint = lastJoint;
+        if (mLefts == null) {
+            return;
+        }
         for (int i = mLefts.length - 1; i >= 0; i--) {
             //        }
             //        while (drowJoint != null ) {
@@ -294,11 +321,11 @@ public class Snake2 extends Element {
         return score;
     }
 
-    public void addScore(int addScore){
-        Log.d(TAG, "eat a food add "+addScore);
-        setScore(this.score+addScore);
+    public void addScore(int addScore) {
+        Log.d(TAG, "eat a food add " + addScore);
+        setScore(this.score + addScore);
     }
-    
+
     public void setScore(long score) {
         this.score = score;
         int levelupJointCount = Contains.SNAKE_LEVEL_UP_JOINT_COUNT;
@@ -318,13 +345,14 @@ public class Snake2 extends Element {
         return (int) (v + 0.5f);
     }
 
-    private onMoveListen mMoveListen;
+    private onEventListen mEventListen;
 
-    public interface onMoveListen {
+    public interface onEventListen {
         void onMove(int leftAtStage, int topAtStage, Snake2 snake);
+        void onDead(int[] lefts, int[] tops);
     }
 
-    public void setMoveListen(onMoveListen moveListen) {
-        mMoveListen = moveListen;
+    public void setEventListen(onEventListen eventListen) {
+        mEventListen = eventListen;
     }
 }

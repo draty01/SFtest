@@ -190,7 +190,12 @@ public class Screen extends SurfaceView implements SurfaceHolder.Callback {
             p.reset();
             for (int i = 0; i < foods.size(); i++) {
                 //                Log.d(TAG, "drawFoods: "+i);
-                foods.get(i).draw(currentLeft, currentTop, c, p);
+                IElement food = foods.get(i);
+                if (food.isShow()) {
+                    food.draw(currentLeft, currentTop, c, p);
+                }else {
+                    foods.remove(i);
+                }
             }
             //画蛇
             p.reset();

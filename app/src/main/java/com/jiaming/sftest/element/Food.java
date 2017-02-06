@@ -16,12 +16,18 @@ import com.jiaming.sftest.utils.MathUtil;
  */
 public class Food extends Element {
 
+    private boolean reuse=true;
     private int color;
     private int sizeL   = 0;
     private int sizeDip = Contains.FOOD_SIZES_DP[sizeL];
     private int sizeRad = Contains.FOOD_SIZES_PX[sizeL];
     private String TAG="Food";
     Paint mPaint=new Paint();
+    private boolean isEated;
+
+    public boolean isReuse() {
+        return reuse;
+    }
 
     public Food(int sizeL) {
         if (sizeL >= Contains.FOOD_SIZES_DP.length || sizeL < 0)
@@ -82,8 +88,17 @@ public class Food extends Element {
      * @return
      */
     public int eated() {
-        //被吃,返回自己分值 重新分配位置
-        RandPosiAndColor();
+        if (reuse) {
+            //被吃,返回自己分值 重新分配位置
+            RandPosiAndColor();
+        }else {
+            isEated=true;
+        }
         return Contains.FOOD_SORCES[sizeL];
+    }
+
+    @Override
+    public boolean isShow() {
+        return !isEated;
     }
 }

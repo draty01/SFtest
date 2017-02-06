@@ -22,4 +22,12 @@
         kongqw:areaBackground="#FF333333"
         kongqw:rockerBackground="#FF987654"
         kongqw:rockerRadius="15dp"/>
+    <Button
+        android:visibility="gone"
+        android:id="@+id/restart"
+        android:layout_width="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="重新开始"
+        android:layout_height="wrap_content"/>
 </RelativeLayout>

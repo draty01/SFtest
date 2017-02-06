@@ -22,7 +22,7 @@ public class InitActivity extends Activity {
         DensityUtil.init(this);
         tips = (TextView) findViewById(R.id.init_tips);
         GameCtrl mGameCtrl = GameCtrl.getInstance();
-        mGameCtrl.init(getApplicationContext(),new GameCtrl.InitCallback() {
+        mGameCtrl.init(getApplicationContext(),false,new GameCtrl.InitCallback() {
             @Override
             public void onChang(final int percentage) {
                 if (percentage != GameCtrl.INIT_OK) {

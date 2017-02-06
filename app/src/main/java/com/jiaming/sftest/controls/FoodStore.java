@@ -10,18 +10,19 @@ import java.util.List;
 /**
  * Created by jiaming.liang on 2017/1/24.
  * 保存点,根据food的位置,分块保存
- * <p>
+ * <p/>
  * 初始化时根据地图大小分块
  * 每块一个集合保存食物
  * 集合放进集合二位数组
  */
 
 public class FoodStore {
-    public static final String TAG="FoodStore";
+    public static final String TAG = "FoodStore";
     private int            mapWidth;//单位px
     private int            mapHeight;
     private List<Food>[][] coorLists;//[Width][Height]
     List<IElement> allFoods = new ArrayList<>();
+    List<IElement> tempFoods = new ArrayList<>();
     private int chunkSizePx = Contains.FOODSTORE_CHUNK_SIZE_PX;
 
     /**
@@ -41,7 +42,7 @@ public class FoodStore {
             heightCount++;
             mapHeightPX -= chunkSizePx;
         }
-        Log.d(TAG, "FoodStore: chunkSizePx:"+chunkSizePx);
+        Log.d(TAG, "FoodStore: chunkSizePx:" + chunkSizePx);
         coorLists = new List[widthCount][heightCount];
         initFood(initFoodCount);
     }
@@ -71,9 +72,18 @@ public class FoodStore {
         list.add(food);
     }
 
+    public void addToAll(Food food) {
+        allFoods.add(food);
+    }
+    
+
+    public void removeFromAll(Food food) {
+        allFoods.remove(food);
+    }
+
     public List<Food> getList(int left, int top) {
-        int width = left / chunkSizePx-1;
-        int hight = top / chunkSizePx-1;
+        int width = left / chunkSizePx;
+        int hight = top / chunkSizePx;
         if (coorLists[width][hight] == null) {
             coorLists[width][hight] = new ArrayList<>();
         }

@@ -55,8 +55,8 @@ public class GameCtrl {
     private InitCallback initCallback;
     private boolean isInited = false;
 
-    public void init(Context context, @NonNull InitCallback callback) {
-        if (isInited) {
+    public void init(Context context, boolean forceInit, @NonNull InitCallback callback) {
+        if (isInited && !forceInit) {
             Log.e(TAG, "isInited: " + isInited);
             callback.onChang(INIT_OK);
             return;
@@ -90,9 +90,9 @@ public class GameCtrl {
             @Override
             public void run() {
                 mFoodStore = new FoodStore(Contains.STAGE_WIDTH_PX, Contains.STAGE_HEIGHT_PX, Contains.FOOD_COUNT);
-//                int snakeCount = Contains.SNAKE_COUNT;
+                //                int snakeCount = Contains.SNAKE_COUNT;
                 mSnake = new Snake2();
-                mSnake.setMoveListen(new Snake2.onMoveListen() {
+                mSnake.setEventListen(new Snake2.onEventListen() {
                     @Override
                     public void onMove(int leftAtStage, int topAtStage, Snake2 snake) {
                         setScreenLeft(leftAtStage - ScreenHaftWidthPx);
@@ -100,48 +100,90 @@ public class GameCtrl {
                         //获取对应块的食物以及碰撞判定
                         int left, top, right, bottom;
                         int sizeRad = mSnake.getSizeRad();
-                        left    = leftAtStage - sizeRad;
-                        left=left<0?0:left;
-                        top     = topAtStage - sizeRad;
-                        top=top<0?0:top;
-                        right   = leftAtStage + sizeRad;
-                        bottom  = topAtStage + sizeRad;
-//                        Log.d(TAG, "onMove2: "
-//                                +"left   :"+left
-//                                +"top    :"+top
-//                                +"right  :"+right
-//                                +"bottom :"+bottom
-//                        );
-                        List<Food>[] foodlists=new List[4];
-                        foodlists[0]=mFoodStore.getList(left,top);
-                        foodlists[1]=mFoodStore.getList(left,bottom);
-                        foodlists[2]=mFoodStore.getList(right,top);
-                        foodlists[3]=mFoodStore.getList(right,bottom);
+                        left = leftAtStage - sizeRad;
+                        left = left < 0 ? 0 : left;
+                        top = topAtStage - sizeRad;
+                        top = top < 0 ? 0 : top;
+                        right = leftAtStage + sizeRad;
+                        bottom = topAtStage + sizeRad;
+                        //                        Log.d(TAG, "onMove2: "
+                        //                                +"left   :"+left
+                        //                                +"top    :"+top
+                        //                                +"right  :"+right
+                        //                                +"bottom :"+bottom
+                        //                        );
+                        int attract_Rad = sizeRad+ Contains.SNAKE_ATTRACT_RAD_PX;
+                        int left1 = leftAtStage - attract_Rad;
+                        left1 = left1 < 0 ? 0 : left1;
+                        int top1 = topAtStage - attract_Rad;
+                        top1 = top1 < 0 ? 0 : top1;
+                        int right1 = leftAtStage + attract_Rad;
+                        int bottom1 = topAtStage + attract_Rad;
+                        
+                        List<Food>[] foodlists = new List[4];
+                        foodlists[0] = mFoodStore.getList(left, top);
+                        foodlists[1] = mFoodStore.getList(left, bottom);
+                        foodlists[2] = mFoodStore.getList(right, top);
+                        foodlists[3] = mFoodStore.getList(right, bottom);
                         for (int i = 0; i < foodlists.length; i++) {
                             List<Food> list = foodlists[i];
-                            if (list.size()>0){
+                            if (list.size() > 0) {
                                 //遍历所有,如果遇到的在范围内就吃掉,蛇加分
-                                for (Food food : list) {
+                                for (int i1 = 0; i1 < list.size(); i1++) {
+                                    Food food = list.get(i1);
                                     int leftPosit = food.getLeftPosition();
                                     int topPosit = food.getTopPosition();
-                                    if (leftPosit<left||leftPosit>right||topPosit<top||topPosit>bottom){
-//                                        Log.d(TAG, "onMove: leftPosit:"+leftPosit
-//                                                +" topPosit:"+topPosit
-//                                                +" left:"+left
-//                                                +" top:"+top
-//                                                +" right:"+right
-//                                                +" bottom:"+bottom
-//                                        );
+                                    if (leftPosit < left || leftPosit > right || topPosit < top || topPosit > bottom) {
+                                        //                                        Log.d(TAG, "onMove: leftPosit:"+leftPosit
+                                        //                                                +" topPosit:"+topPosit
+                                        //                                                +" left:"+left
+                                        //                                                +" top:"+top
+                                        //                                                +" right:"+right
+                                        //                                                +" bottom:"+bottom
+                                        //                                        );
+                                        //非吃到的区域,检查是否在吸引区
+                                        if (leftPosit < left1 || leftPosit > right1 || topPosit < top1 || topPosit > bottom1) {
+                                            continue;
+                                        }
+                                        //吸引区:
+                                        int l = (leftAtStage - leftPosit) * (leftAtStage - leftPosit);
+                                        int t = (topAtStage - topPosit) * (topAtStage - topPosit);
+                                        float distance = (float) Math.sqrt(l + t);
+                                        
+                                        float v = 4 / distance;
+                                        int mLeft = (int) ((leftAtStage - leftPosit) * v + leftPosit + 0.5f);
+                                        int mTop = (int) ((topAtStage - topPosit) * v + topPosit + 0.5f);
+                                        food.setLeftPosition(mLeft);
+                                        food.setTopPosition(mTop);
                                         continue;
                                     }
                                     int score = food.eated();
                                     snake.addScore(score);
-                                    list.remove(food);
-                                    mFoodStore.addChunk(food);
+                                    list.remove(i1);
+                                    if (food.isReuse()) {
+                                        mFoodStore.addChunk(food);
+                                    }
                                 }
                             }
                         }
-                        
+                       
+                    }
+
+                    @Override
+                    public void onDead(int[] lefts, int[] tops) {
+                        for (int i = 0; i < lefts.length; i++) {
+                            if (eventCallback != null) {
+                                eventCallback.onGameOver();
+                            }
+                            if (i % 2 == 0) {
+                                return;
+                            }
+                            Food food = new Food(2);
+                            food.setLeftPosition(lefts[i]);
+                            food.setTopPosition(tops[i]);
+                            mFoodStore.addToAll(food);
+                            mFoodStore.addChunk(food);
+                        }
                     }
                 });
                 snakes.add(mSnake);
@@ -200,5 +242,15 @@ public class GameCtrl {
 
     public interface InitCallback {
         void onChang(int percentage);
+    }
+
+    EventCallback eventCallback;
+
+    public interface EventCallback {
+        void onGameOver();
+    }
+
+    public void setEventCallback(EventCallback eventCallback) {
+        this.eventCallback = eventCallback;
     }
 }
